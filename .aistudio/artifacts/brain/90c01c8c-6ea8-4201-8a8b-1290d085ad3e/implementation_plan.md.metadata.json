@@ -1,0 +1,6 @@
+{
+  "summary":  "Architectural implementation plan for TM Sports Web App featuring Tier 1 MVP (Public Website, Member Dashboard, Single-Admin Operations Console, Registration Flow) and interactive Tier 2 automations (Stripe Checkout preview, Telegram bot broadcast & notifications preview, interactive class schedule & waitlist). Styled with an Athletic Blaze Orange and Slate Charcoal palette, anti-slop typography, and a live Role Switcher toolbar for rapid evaluation.",
+  "updatedAt":  "2026-10-27T13:22:13.432140524Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

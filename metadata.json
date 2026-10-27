@@ -1,0 +1,6 @@
+{
+  "name": "TM Sports - Club & Member Hub",
+  "description": "Official athletic platform for TM Sports. Class schedules, membership management, Taekwondo for kids, hiking events, and member self-service.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
