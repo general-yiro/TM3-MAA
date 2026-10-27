@@ -4,6 +4,8 @@ export type UserRole = 'visitor' | 'member' | 'pending' | 'admin';
 
 export type Language = 'en' | 'fr';
 
+export type ThemeMode = 'light' | 'dark';
+
 export interface EmergencyContact {
   name: string;
   relationship: string;
@@ -33,6 +35,43 @@ export interface Member {
   qrCodeId: string;
   paymentMethod?: 'in_person' | 'stripe';
   lastPaymentAmount?: number;
+  sparringPoints?: number;
+  eventParticipationCount?: number;
+}
+
+export interface TournamentEvent {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  location: string;
+  type: 'tournament' | 'sparring_clinic' | 'belt_exam' | 'open_mat';
+  division: 'Youth (Ages 5-14)' | 'Cadet & Junior (12-17)' | 'Adult & Senior (18+)' | 'All Divisions';
+  sanctionedBy: string;
+  pointsAwarded: number;
+  registrationFee: number;
+  maxCompetitors: number;
+  registeredMemberIds: string[];
+  description: string;
+  weightClasses?: string[];
+}
+
+export interface LeaderboardAthlete {
+  id: string;
+  memberId?: string;
+  name: string;
+  division: 'Youth' | 'Adult';
+  beltRank: string;
+  sparringPoints: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  eventsAttended: number;
+  tournamentsEntered: number;
+  hikesCompleted: number;
+  streak: string;
+  rankChange: 'up' | 'down' | 'same';
+  badges: string[];
 }
 
 export interface SportService {
@@ -99,3 +138,25 @@ export interface TelegramMessage {
   text: string;
   read: boolean;
 }
+
+export type ActivityEventType =
+  | 'registration'
+  | 'approval'
+  | 'rejection'
+  | 'subscription_change'
+  | 'payment'
+  | 'profile_update'
+  | 'status_change';
+
+export interface ActivityLogEntry {
+  id: string;
+  timestamp: string;
+  eventType: ActivityEventType;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  description: string;
+  details?: string;
+  actor: string;
+}
+

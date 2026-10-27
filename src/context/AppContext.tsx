@@ -8,7 +8,11 @@ import {
   TelegramMessage,
   UserRole,
   Language,
-  MembershipStatus
+  MembershipStatus,
+  ActivityLogEntry,
+  ThemeMode,
+  TournamentEvent,
+  LeaderboardAthlete
 } from '../types';
 import {
   INITIAL_MEMBERS,
@@ -16,7 +20,10 @@ import {
   INITIAL_CLASSES,
   INITIAL_ANNOUNCEMENTS,
   INITIAL_HIKES,
-  INITIAL_TELEGRAM_MESSAGES
+  INITIAL_TELEGRAM_MESSAGES,
+  INITIAL_ACTIVITY_LOGS,
+  INITIAL_TOURNAMENTS,
+  INITIAL_LEADERBOARD
 } from '../data/initialData';
 
 interface AppContextType {
@@ -24,6 +31,8 @@ interface AppContextType {
   setRole: (role: UserRole) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  theme: ThemeMode;
+  toggleTheme: () => void;
   activeMember: Member | null;
   members: Member[];
   services: SportService[];
@@ -31,6 +40,9 @@ interface AppContextType {
   announcements: Announcement[];
   hikes: HikingEvent[];
   telegramMessages: TelegramMessage[];
+  activityLogs: ActivityLogEntry[];
+  tournaments: TournamentEvent[];
+  leaderboard: LeaderboardAthlete[];
   // Modals & triggers
   isRegistrationOpen: boolean;
   setIsRegistrationOpen: (open: boolean) => void;
@@ -42,11 +54,14 @@ interface AppContextType {
   openStripeCheckout: (memberId: string, amount: number, description: string) => void;
   isTelegramOpen: boolean;
   setIsTelegramOpen: (open: boolean) => void;
+  isSearchOpen: boolean;
+  setIsSearchOpen: (open: boolean) => void;
   toast: string | null;
   showToast: (message: string) => void;
 
   // Actions
   registerNewMember: (data: Omit<Member, 'id' | 'status' | 'joinDate' | 'renewalDate' | 'qrCodeId'>) => Member;
+  updateMemberProfile: (memberId: string, updates: Partial<Member>) => void;
   approveMember: (id: string) => void;
   rejectMember: (id: string, reason?: string) => void;
   changeMemberStatus: (id: string, status: MembershipStatus) => void;
@@ -54,11 +69,14 @@ interface AppContextType {
   bookClass: (classId: string, memberId: string) => boolean;
   cancelClassBooking: (classId: string, memberId: string) => void;
   joinHike: (hikeId: string, memberId: string) => void;
+  registerForTournament: (tournamentId: string, memberId: string) => boolean;
+  logSparringMatch: (athleteId: string, result: 'win' | 'loss' | 'draw', pointsGained: number, note?: string) => void;
   createAnnouncement: (announcement: Omit<Announcement, 'id'>) => void;
   deleteAnnouncement: (id: string) => void;
   togglePinAnnouncement: (id: string) => void;
   completeStripePayment: (memberId: string, amount: number) => void;
   sendTelegramBroadcast: (text: string, type?: TelegramMessage['type']) => void;
+  addActivityLog: (entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => void;
   resetAllData: () => void;
 }
 
@@ -67,6 +85,23 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRoleState] = useState<UserRole>('visitor');
   const [language, setLanguage] = useState<Language>('en');
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('tm_theme');
+    return (saved as ThemeMode) || 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('tm_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   // Load from localStorage or defaults
   const [members, setMembers] = useState<Member[]>(() => {
@@ -94,6 +129,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_TELEGRAM_MESSAGES;
   });
 
+  const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>(() => {
+    const saved = localStorage.getItem('tm_activity_logs');
+    return saved ? JSON.parse(saved) : INITIAL_ACTIVITY_LOGS;
+  });
+
+  const [tournaments, setTournaments] = useState<TournamentEvent[]>(() => {
+    const saved = localStorage.getItem('tm_tournaments');
+    return saved ? JSON.parse(saved) : INITIAL_TOURNAMENTS;
+  });
+
+  const [leaderboard, setLeaderboard] = useState<LeaderboardAthlete[]>(() => {
+    const saved = localStorage.getItem('tm_leaderboard');
+    return saved ? JSON.parse(saved) : INITIAL_LEADERBOARD;
+  });
+
   const services = INITIAL_SERVICES;
 
   // Active member depends on role
@@ -110,7 +160,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
   const [stripeModalData, setStripeModalData] = useState<{ memberId: string; amount: number; description: string } | null>(null);
   const [isTelegramOpen, setIsTelegramOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Global Ctrl + K / Cmd + K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -132,6 +195,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('tm_telegram', JSON.stringify(telegramMessages));
   }, [telegramMessages]);
+
+  useEffect(() => {
+    localStorage.setItem('tm_activity_logs', JSON.stringify(activityLogs));
+  }, [activityLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('tm_tournaments', JSON.stringify(tournaments));
+  }, [tournaments]);
+
+  useEffect(() => {
+    localStorage.setItem('tm_leaderboard', JSON.stringify(leaderboard));
+  }, [leaderboard]);
+
+  const addActivityLog = (entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => {
+    const now = new Date();
+    const timestamp = now.toISOString().slice(0, 16).replace('T', ' ');
+    const newEntry: ActivityLogEntry = {
+      ...entry,
+      id: `log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp
+    };
+    setActivityLogs((prev) => [newEntry, ...prev]);
+  };
 
   const showToast = (message: string) => {
     setToast(message);
@@ -156,6 +242,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const openStripeCheckout = (memberId: string, amount: number, description: string) => {
     setStripeModalData({ memberId, amount, description });
     setIsStripeModalOpen(true);
+  };
+
+  const updateMemberProfile = (memberId: string, updates: Partial<Member>) => {
+    const target = members.find((m) => m.id === memberId);
+    if (!target) return;
+
+    setMembers((prev) =>
+      prev.map((m) => (m.id === memberId ? { ...m, ...updates } : m))
+    );
+
+    const changedParts: string[] = [];
+    if (updates.emergencyContact) {
+      changedParts.push(`Emergency Contact (${updates.emergencyContact.name} - ${updates.emergencyContact.phone})`);
+    }
+    if (updates.services) {
+      changedParts.push(`Primary Athletic Interests (${updates.services.join(', ')})`);
+    }
+    if (updates.phone) {
+      changedParts.push(`Phone (${updates.phone})`);
+    }
+    if (updates.childProfile) {
+      changedParts.push(`Youth Student Profile (${updates.childProfile.childName})`);
+    }
+
+    addActivityLog({
+      eventType: 'profile_update',
+      memberId,
+      memberName: target.fullName,
+      memberEmail: target.email,
+      description: 'Member updated profile details & athletic preferences',
+      details: changedParts.join(' · ') || 'Updated profile fields',
+      actor: `${target.fullName} (Self)`
+    });
+
+    showToast('Member profile and athletic preferences updated!');
   };
 
   const registerNewMember = (data: Omit<Member, 'id' | 'status' | 'joinDate' | 'renewalDate' | 'qrCodeId'>): Member => {
@@ -186,6 +307,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       read: false
     };
     setTelegramMessages((prev) => [tgAlert, ...prev]);
+
+    // Track activity log
+    addActivityLog({
+      eventType: 'registration',
+      memberId: newMember.id,
+      memberName: newMember.fullName,
+      memberEmail: newMember.email,
+      description: 'Online membership registration submitted',
+      details: `Selected: ${newMember.services.join(', ')}`,
+      actor: `${newMember.fullName} (Self)`
+    });
 
     showToast(`Application submitted! Welcome ${newMember.fullName}. Review is pending.`);
     return newMember;
@@ -218,6 +350,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setTelegramMessages((prev) => [tgAlert, ...prev]);
 
+    // Track activity log
+    addActivityLog({
+      eventType: 'approval',
+      memberId: id,
+      memberName: member.fullName,
+      memberEmail: member.email,
+      description: 'Membership approved & access pass activated',
+      details: `Pass ID: ${member.qrCodeId.replace('-P', '-A')}`,
+      actor: 'Coach Marcus Vance (Admin)'
+    });
+
     showToast(`Member ${member.fullName} has been approved & activated!`);
   };
 
@@ -237,13 +380,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       )
     );
 
+    // Track activity log
+    addActivityLog({
+      eventType: 'rejection',
+      memberId: id,
+      memberName: member.fullName,
+      memberEmail: member.email,
+      description: 'Membership application rejected',
+      details: `Reason: ${reason || 'Incomplete verification'}`,
+      actor: 'Coach Marcus Vance (Admin)'
+    });
+
     showToast(`Application for ${member.fullName} marked as rejected.`);
   };
 
   const changeMemberStatus = (id: string, status: MembershipStatus) => {
+    const member = members.find((m) => m.id === id);
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, status } : m))
     );
+
+    if (member) {
+      addActivityLog({
+        eventType: 'status_change',
+        memberId: id,
+        memberName: member.fullName,
+        memberEmail: member.email,
+        description: `Membership status updated to ${status.toUpperCase()}`,
+        details: 'Admin manual status change',
+        actor: 'Coach Marcus Vance (Admin)'
+      });
+    }
+
     showToast(`Membership status updated to ${status}.`);
   };
 
@@ -334,6 +502,122 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Confirmed for ${targetHike.title}!`);
   };
 
+  const registerForTournament = (tournamentId: string, memberId: string): boolean => {
+    const target = tournaments.find((t) => t.id === tournamentId);
+    if (!target) return false;
+
+    if (target.registeredMemberIds.includes(memberId)) {
+      showToast('You are already registered for this event.');
+      return false;
+    }
+
+    if (target.registeredMemberIds.length >= target.maxCompetitors) {
+      showToast('Event is currently full.');
+      return false;
+    }
+
+    setTournaments((prev) =>
+      prev.map((t) =>
+        t.id === tournamentId
+          ? { ...t, registeredMemberIds: [...t.registeredMemberIds, memberId] }
+          : t
+      )
+    );
+
+    // Update member sparring points & event count
+    const bonusPoints = target.type === 'tournament' ? 25 : 15;
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === memberId
+          ? {
+              ...m,
+              eventParticipationCount: (m.eventParticipationCount || 0) + 1,
+              sparringPoints: (m.sparringPoints || 0) + bonusPoints
+            }
+          : m
+      )
+    );
+
+    // Update leaderboard athlete if registered
+    setLeaderboard((prev) =>
+      prev.map((a) =>
+        a.memberId === memberId
+          ? {
+              ...a,
+              eventsAttended: a.eventsAttended + 1,
+              tournamentsEntered: target.type === 'tournament' ? a.tournamentsEntered + 1 : a.tournamentsEntered,
+              sparringPoints: a.sparringPoints + bonusPoints
+            }
+          : a
+      )
+    );
+
+    const member = members.find((m) => m.id === memberId);
+    if (member) {
+      addActivityLog({
+        eventType: 'status_change',
+        memberId: member.id,
+        memberName: member.fullName,
+        memberEmail: member.email,
+        description: `Registered for ${target.title}`,
+        details: `Confirmed spot (${target.division} · +${bonusPoints} sparring points awarded)`,
+        actor: `${member.fullName} (Self)`
+      });
+    }
+
+    // Telegram alert
+    const tgAlert: TelegramMessage = {
+      id: `tg-${Date.now()}`,
+      timestamp: 'Just now',
+      sender: 'TM Sports Bot',
+      type: 'event',
+      text: `🥋 [TOURNAMENT ENTRY] Spot reserved for ${target.title}. Good luck in the bracket!`,
+      read: false
+    };
+    setTelegramMessages((prev) => [tgAlert, ...prev]);
+
+    showToast(`Registered for ${target.title}! (+${bonusPoints} Sparring Pts)`);
+    return true;
+  };
+
+  const logSparringMatch = (athleteId: string, result: 'win' | 'loss' | 'draw', pointsGained: number, note?: string) => {
+    setLeaderboard((prev) =>
+      prev.map((a) => {
+        if (a.id === athleteId || a.memberId === athleteId) {
+          const newWins = result === 'win' ? a.wins + 1 : a.wins;
+          const newLosses = result === 'loss' ? a.losses + 1 : a.losses;
+          const newDraws = result === 'draw' ? a.draws + 1 : a.draws;
+          const newPoints = Math.max(0, a.sparringPoints + pointsGained);
+          const newStreak = result === 'win' ? `🔥 ${newWins}-Match Streak` : 'Reset';
+          return {
+            ...a,
+            wins: newWins,
+            losses: newLosses,
+            draws: newDraws,
+            sparringPoints: newPoints,
+            streak: newStreak,
+            rankChange: result === 'win' ? 'up' : result === 'loss' ? 'down' : 'same'
+          };
+        }
+        return a;
+      })
+    );
+
+    // Also update member record
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === athleteId || (activeMember && m.id === activeMember.id && athleteId === activeMember.id)
+          ? {
+              ...m,
+              sparringPoints: Math.max(0, (m.sparringPoints || 0) + pointsGained)
+            }
+          : m
+      )
+    );
+
+    showToast(`Sparring result logged: ${result.toUpperCase()} (+${pointsGained} pts)`);
+  };
+
   const createAnnouncement = (announcement: Omit<Announcement, 'id'>) => {
     const newAnn: Announcement = {
       ...announcement,
@@ -401,6 +685,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setTelegramMessages((prev) => [tgAlert, ...prev]);
 
+    // Log payment activity
+    addActivityLog({
+      memberId,
+      memberName,
+      memberEmail: target ? target.email : 'checkout@tmsports.org',
+      eventType: 'payment',
+      description: `Stripe online payment of $${amount.toFixed(2)} completed. Subscription extended through ${renewalDate}.`,
+      details: 'Automatic subscription renewal processed via Stripe Checkout simulation',
+      actor: `${memberName} (Stripe)`
+    });
+
     showToast(`Stripe payment of $${amount.toFixed(2)} successful! Account active.`);
   };
 
@@ -423,11 +718,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAnnouncements(INITIAL_ANNOUNCEMENTS);
     setHikes(INITIAL_HIKES);
     setTelegramMessages(INITIAL_TELEGRAM_MESSAGES);
+    setActivityLogs(INITIAL_ACTIVITY_LOGS);
+    setTournaments(INITIAL_TOURNAMENTS);
+    setLeaderboard(INITIAL_LEADERBOARD);
     localStorage.removeItem('tm_members');
     localStorage.removeItem('tm_classes');
     localStorage.removeItem('tm_announcements');
     localStorage.removeItem('tm_hikes');
     localStorage.removeItem('tm_telegram');
+    localStorage.removeItem('tm_activity_logs');
+    localStorage.removeItem('tm_tournaments');
+    localStorage.removeItem('tm_leaderboard');
     showToast('All demo data reset to default seed!');
   };
 
@@ -438,6 +739,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setRole,
         language,
         setLanguage,
+        theme,
+        toggleTheme,
         activeMember,
         members,
         services,
@@ -445,6 +748,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         announcements,
         hikes,
         telegramMessages,
+        activityLogs,
+        tournaments,
+        leaderboard,
         isRegistrationOpen,
         setIsRegistrationOpen,
         selectedServiceForJoin,
@@ -455,9 +761,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openStripeCheckout,
         isTelegramOpen,
         setIsTelegramOpen,
+        isSearchOpen,
+        setIsSearchOpen,
         toast,
         showToast,
         registerNewMember,
+        updateMemberProfile,
+        addActivityLog,
         approveMember,
         rejectMember,
         changeMemberStatus,
@@ -465,6 +775,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bookClass,
         cancelClassBooking,
         joinHike,
+        registerForTournament,
+        logSparringMatch,
         createAnnouncement,
         deleteAnnouncement,
         togglePinAnnouncement,

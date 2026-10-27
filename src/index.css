@@ -7,6 +7,7 @@
     color: #1f1f1f;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -15,10 +16,141 @@
   }
 }
 
-/* Google-style subtle scrollbar */
+/* =========================================================================
+   VS CODE DARK THEME (Dark+) STYLES & OVERRIDES
+   Editor: #1e1e1e | Sidebar/Panels: #252526 | Widgets/Hover: #2a2d2e | Borders: #3c3c3c
+   Accent: #007acc | High-contrast Text: #ffffff | Body Text: #cccccc | Muted: #858585
+   ========================================================================= */
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #1e1e1e !important;
+  color: #cccccc !important;
+}
+
+/* Core background transforms to VS Code dark palette */
+.dark .bg-\[\#f8fafd\],
+.dark .bg-\[\#f0f4f9\] {
+  background-color: #1e1e1e !important;
+}
+
+.dark .bg-\[\#ffffff\],
+.dark .bg-white {
+  background-color: #252526 !important;
+}
+
+.dark .bg-\[\#f1f3f4\],
+.dark .bg-black\/\[0\.04\] {
+  background-color: #2d2d2d !important;
+}
+
+/* Hover surfaces */
+.dark .hover\:bg-\[\#f1f3f4\]:hover,
+.dark .hover\:bg-\[\#f8fafd\]:hover,
+.dark .hover\:bg-\[\#e9eef6\]:hover,
+.dark .hover\:bg-\[\#f0f4f9\]:hover {
+  background-color: #2a2d2e !important;
+}
+
+/* Borders in VS Code Dark */
+.dark .border-\[\#dadce0\],
+.dark .border-\[\#e0e2ec\],
+.dark .border-\[\#dadce0\]\/60 {
+  border-color: #3c3c3c !important;
+}
+
+.dark .border-b,
+.dark .border-t,
+.dark .border {
+  border-color: #3c3c3c;
+}
+
+/* Typography in VS Code Dark */
+.dark .text-\[\#1f1f1f\],
+.dark .text-\[\#202124\],
+.dark .text-gray-900 {
+  color: #ffffff !important;
+}
+
+.dark .text-\[\#444746\],
+.dark .text-gray-700 {
+  color: #cccccc !important;
+}
+
+.dark .text-\[\#5f6368\],
+.dark .text-\[\#747775\],
+.dark .text-gray-500 {
+  color: #9d9d9d !important;
+}
+
+/* VS Code Dark Inputs & Form Controls */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select {
+  background-color: #3c3c3c !important;
+  color: #ffffff !important;
+  border-color: #4f4f4f !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #007acc !important;
+  outline: 1px solid #007acc !important;
+}
+
+/* VS Code Accent Blues */
+.dark .bg-\[\#1a73e8\] {
+  background-color: #007acc !important;
+}
+.dark .hover\:bg-\[\#1557b0\]:hover {
+  background-color: #0062a3 !important;
+}
+.dark .text-\[\#1a73e8\] {
+  color: #3794ff !important;
+}
+.dark .bg-\[\#e8f0fe\] {
+  background-color: #094771 !important;
+  color: #ffffff !important;
+}
+.dark .bg-\[\#d3e3fd\] {
+  background-color: #0e639c !important;
+  color: #ffffff !important;
+}
+
+/* VS Code Status Tags */
+.dark .bg-\[\#c4eed0\] {
+  background-color: #1b382b !important;
+  color: #4ec9b0 !important;
+}
+.dark .text-\[\#137333\] {
+  color: #4ec9b0 !important;
+}
+
+.dark .bg-\[\#feefc3\] {
+  background-color: #3e3312 !important;
+  color: #dcdcaa !important;
+}
+.dark .text-\[\#b06000\] {
+  color: #dcdcaa !important;
+}
+
+.dark .bg-\[\#fce8e6\] {
+  background-color: #3b1d1d !important;
+  color: #f44747 !important;
+}
+.dark .text-\[\#c5221f\],
+.dark .text-\[\#ea4335\] {
+  color: #f44747 !important;
+}
+
+/* Scrollbars in VS Code dark */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -34,7 +166,12 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #bdc1c6;
-  border-radius: 9999px;
-  border: 2px solid transparent;
-  background-clip: content-box;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #424242 !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f !important;
 }

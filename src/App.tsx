@@ -18,7 +18,10 @@ import { AdminPanel } from './components/AdminPanel';
 import { RegistrationModal } from './components/RegistrationModal';
 import { StripeCheckoutModal } from './components/StripeCheckoutModal';
 import { TelegramBotModal } from './components/TelegramBotModal';
+import { QuickSearchModal } from './components/QuickSearchModal';
 import { Footer } from './components/Footer';
+import { CalendarView } from './components/CalendarView';
+import { GeminiChatbot } from './components/GeminiChatbot';
 import { SportService } from './types';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -73,6 +76,10 @@ function MainApp() {
           <MemberDashboard onBackToHome={() => setCurrentTab('home')} />
         ) : currentTab === 'admin-panel' ? (
           <AdminPanel onBackToHome={() => setCurrentTab('home')} />
+        ) : currentTab === 'calendar' ? (
+          <div className="py-10 max-w-7xl mx-auto px-6">
+            <CalendarView onBackToHome={() => setCurrentTab('home')} />
+          </div>
         ) : (
           <>
             <Hero
@@ -92,9 +99,11 @@ function MainApp() {
       <Footer />
 
       {/* 5. Modals & Overlays */}
+      <QuickSearchModal onNavigateToTab={setCurrentTab} />
       <RegistrationModal />
       <StripeCheckoutModal />
       <TelegramBotModal />
+      <GeminiChatbot />
 
       {/* 6. Google M3 Snackbar / Toast */}
       {toast && (

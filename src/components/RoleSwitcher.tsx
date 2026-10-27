@@ -1,10 +1,10 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { UserRole } from '../types';
-import { Shield, User, Clock, Eye, Send, RotateCcw, Globe } from 'lucide-react';
+import { Shield, User, Clock, Eye, Send, RotateCcw, Globe, Sun, Moon } from 'lucide-react';
 
 export const RoleSwitcher: React.FC = () => {
-  const { role, setRole, language, setLanguage, telegramMessages, setIsTelegramOpen, resetAllData } = useApp();
+  const { role, setRole, language, setLanguage, theme, toggleTheme, telegramMessages, setIsTelegramOpen, resetAllData } = useApp();
 
   const unreadTelegram = telegramMessages.filter((m) => !m.read).length;
 
@@ -125,6 +125,25 @@ export const RoleSwitcher: React.FC = () => {
           >
             <Globe className="w-3 h-3 text-[#5f6368]" />
             <span className="uppercase font-mono">{language}</span>
+          </button>
+
+          {/* VS Code Dark Mode Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ffffff] border border-[#dadce0] text-[#444746] hover:bg-[#f1f3f4] transition-colors text-[11px] font-medium"
+            title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to VS Code Dark Theme'}
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-[#fbbc04]" />
+                <span className="font-mono text-[10px] text-[#4ec9b0]">VS Code Dark</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-[#5f6368]" />
+                <span className="font-mono text-[10px] text-[#5f6368]">Dark</span>
+              </>
+            )}
           </button>
 
           {/* Reset Demo Data */}

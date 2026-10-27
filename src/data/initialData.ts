@@ -1,4 +1,14 @@
-import { SportService, Member, TimetableClass, Announcement, HikingEvent, TelegramMessage } from '../types';
+import {
+  SportService,
+  Member,
+  TimetableClass,
+  Announcement,
+  HikingEvent,
+  TelegramMessage,
+  ActivityLogEntry,
+  TournamentEvent,
+  LeaderboardAthlete
+} from '../types';
 
 export const INITIAL_SERVICES: SportService[] = [
   {
@@ -121,7 +131,9 @@ export const INITIAL_MEMBERS: Member[] = [
     },
     qrCodeId: 'TM-PASS-8472-A',
     paymentMethod: 'stripe',
-    lastPaymentAmount: 85
+    lastPaymentAmount: 85,
+    sparringPoints: 680,
+    eventParticipationCount: 11
   },
   {
     id: 'tm-mem-102',
@@ -145,7 +157,9 @@ export const INITIAL_MEMBERS: Member[] = [
     },
     notes: 'Registered online yesterday. Awaiting coach approval and in-person orientation.',
     qrCodeId: 'TM-PASS-9901-P',
-    paymentMethod: 'in_person'
+    paymentMethod: 'in_person',
+    sparringPoints: 540,
+    eventParticipationCount: 8
   },
   {
     id: 'tm-mem-103',
@@ -475,3 +489,320 @@ export const INITIAL_TELEGRAM_MESSAGES: TelegramMessage[] = [
     read: true
   }
 ];
+
+export const INITIAL_ACTIVITY_LOGS: ActivityLogEntry[] = [
+  {
+    id: 'log-1',
+    timestamp: '2026-10-27 12:15',
+    eventType: 'registration',
+    memberId: 'tm-mem-102',
+    memberName: 'Sarah Lin',
+    memberEmail: 'sarah.lin@community.ca',
+    description: 'New member registration submitted',
+    details: 'Disciplines: Taekwondo for Kids (Child: Lucas Lin, Age 8), Group Aerobics & Cardio',
+    actor: 'Sarah Lin (Self)'
+  },
+  {
+    id: 'log-2',
+    timestamp: '2026-10-26 15:40',
+    eventType: 'payment',
+    memberId: 'tm-mem-101',
+    memberName: 'Alex Rivers',
+    memberEmail: 'alex.rivers@sportsmail.com',
+    description: 'Stripe subscription payment processed ($85.00)',
+    details: 'Cycle extended 30 days through 2026-11-15 (Tx ID: ch_3P7eK8902)',
+    actor: 'Stripe Webhook'
+  },
+  {
+    id: 'log-3',
+    timestamp: '2026-10-25 10:12',
+    eventType: 'approval',
+    memberId: 'tm-mem-105',
+    memberName: 'Emily Chen-Morales',
+    memberEmail: 'emily.chen@familyfitness.com',
+    description: 'Application approved & facility barcode issued',
+    details: 'Access pass TM-PASS-7734-A activated for Dojo Hall B & Open Gym',
+    actor: 'Coach Marcus Vance (Admin)'
+  },
+  {
+    id: 'log-4',
+    timestamp: '2026-10-24 16:30',
+    eventType: 'subscription_change',
+    memberId: 'tm-mem-101',
+    memberName: 'Alex Rivers',
+    memberEmail: 'alex.rivers@sportsmail.com',
+    description: 'Added athletic program to active subscription',
+    details: 'Added: Outdoor Hiking & Trail Summits (Total active disciplines: 3)',
+    actor: 'Alex Rivers (Self)'
+  },
+  {
+    id: 'log-5',
+    timestamp: '2026-10-22 09:00',
+    eventType: 'profile_update',
+    memberId: 'tm-mem-104',
+    memberName: 'Liam O’Connor',
+    memberEmail: 'liam.oc@athletics.net',
+    description: 'Updated emergency contact information',
+    details: 'Contact changed to Fiona O’Connor (Mother) · +1 (555) 670-1122',
+    actor: 'Liam O’Connor (Self)'
+  },
+  {
+    id: 'log-6',
+    timestamp: '2026-10-20 18:00',
+    eventType: 'status_change',
+    memberId: 'tm-mem-103',
+    memberName: 'Marcus Dubois',
+    memberEmail: 'm.dubois@peakmail.org',
+    description: 'Membership status set to expired',
+    details: 'Grace period elapsed after 30 days without renewal receipt',
+    actor: 'Automated Lifecycle Worker'
+  }
+];
+
+export const INITIAL_TOURNAMENTS: TournamentEvent[] = [
+  {
+    id: 'tourn-1',
+    title: 'State Youth & Cadet Taekwondo Championship',
+    date: '2026-11-14',
+    time: '09:00 AM – 05:00 PM',
+    location: 'TM Sports Center Arena · Ring A & B',
+    type: 'tournament',
+    division: 'Youth (Ages 5-14)',
+    sanctionedBy: 'Pacific & National Taekwondo Federation',
+    pointsAwarded: 150,
+    registrationFee: 45,
+    maxCompetitors: 32,
+    registeredMemberIds: ['tm-mem-105', 'tm-mem-102'],
+    description: 'Official tournament featuring electronic trunk sensors, Olympic WTF point-rules, and gold/silver/bronze podium ceremonies for youth sparring athletes.',
+    weightClasses: ['Finweight (-28kg)', 'Flyweight (-34kg)', 'Bantamweight (-40kg)', 'Featherweight (-46kg)']
+  },
+  {
+    id: 'tourn-2',
+    title: 'Kids Quarterly Belt Promotion & Poomsae Exam',
+    date: '2026-11-14',
+    time: '02:00 PM – 04:30 PM',
+    location: 'Dojo Hall B',
+    type: 'belt_exam',
+    division: 'Youth (Ages 5-14)',
+    sanctionedBy: 'Certified Kukkiwon 4th Dan Master Jin-Woo Park',
+    pointsAwarded: 80,
+    registrationFee: 30,
+    maxCompetitors: 25,
+    registeredMemberIds: ['tm-mem-105'],
+    description: 'Official advancement exam assessing Taeguk forms, breaking pine boards, speed kick agility drills, and martial arts etiquette.'
+  },
+  {
+    id: 'tourn-3',
+    title: 'Autumn Black Belt Invitational & Sparring Trials',
+    date: '2026-11-21',
+    time: '01:00 PM – 06:30 PM',
+    location: 'Main Dojo Arena',
+    type: 'tournament',
+    division: 'Adult & Senior (18+)',
+    sanctionedBy: 'North American Martial Arts League',
+    pointsAwarded: 250,
+    registrationFee: 55,
+    maxCompetitors: 24,
+    registeredMemberIds: ['tm-mem-101'],
+    description: 'Elite adult full-contact sparring with Olympic scoring rules, sudden-death Golden Point overtime, and regional squad invitations.',
+    weightClasses: ['Under 68kg', 'Under 80kg', 'Heavyweight 80kg+']
+  },
+  {
+    id: 'tourn-4',
+    title: 'High-Altitude Ridge Summit Trek & Navigation Clinic',
+    date: '2026-11-28',
+    time: '07:00 AM – 03:30 PM',
+    location: 'Sentinel Ridge Alpine Pass',
+    type: 'open_mat',
+    division: 'All Divisions',
+    sanctionedBy: 'TM Sports Mountain Guides & Wilderness First Aid',
+    pointsAwarded: 100,
+    registrationFee: 20,
+    maxCompetitors: 20,
+    registeredMemberIds: ['tm-mem-101', 'tm-mem-104'],
+    description: 'High-altitude conditioning trek combining 14km ridge pacing with an alpine wilderness orientation and group recovery meal.'
+  },
+  {
+    id: 'tourn-5',
+    title: 'Winter Open Mat Sparring Scrimmage & Referee Clinic',
+    date: '2026-12-05',
+    time: '10:00 AM – 02:00 PM',
+    location: 'Dojo Hall A & B',
+    type: 'sparring_clinic',
+    division: 'All Divisions',
+    sanctionedBy: 'TM Sports Coaching Staff',
+    pointsAwarded: 120,
+    registrationFee: 15,
+    maxCompetitors: 30,
+    registeredMemberIds: ['tm-mem-101'],
+    description: 'Friendly club-wide sparring scrimmage with corner judges, electronic point clickers, video review, and tactical seminars.'
+  }
+];
+
+export const INITIAL_LEADERBOARD: LeaderboardAthlete[] = [
+  {
+    id: 'lead-1',
+    name: 'Jin-Soo "Viper" Kim',
+    division: 'Adult',
+    beltRank: 'Black Belt (2nd Dan)',
+    sparringPoints: 890,
+    wins: 18,
+    losses: 2,
+    draws: 0,
+    eventsAttended: 14,
+    tournamentsEntered: 7,
+    hikesCompleted: 5,
+    streak: '🔥 6-Match Win Streak',
+    rankChange: 'same',
+    badges: ['🥋 State Gold', '⚡ Fastest Knockout', '🏆 2026 MVP']
+  },
+  {
+    id: 'lead-2',
+    name: 'Maya "Shadow" Lin',
+    division: 'Adult',
+    beltRank: 'Black Belt (1st Dan)',
+    sparringPoints: 820,
+    wins: 16,
+    losses: 3,
+    draws: 1,
+    eventsAttended: 12,
+    tournamentsEntered: 6,
+    hikesCompleted: 4,
+    streak: '🔥 4-Match Win Streak',
+    rankChange: 'up',
+    badges: ['🥋 Regional Champion', '🏔️ Summit Master']
+  },
+  {
+    id: 'lead-3',
+    memberId: 'tm-mem-101',
+    name: 'Alex Rivers',
+    division: 'Adult',
+    beltRank: 'Blue Belt',
+    sparringPoints: 680,
+    wins: 12,
+    losses: 4,
+    draws: 0,
+    eventsAttended: 11,
+    tournamentsEntered: 4,
+    hikesCompleted: 5,
+    streak: '🔥 2-Match Win Streak',
+    rankChange: 'up',
+    badges: ['🥋 Silver Medalist', '🏔️ Cascade Summit Hero', '💪 100kg Club']
+  },
+  {
+    id: 'lead-4',
+    name: 'Liam O’Connor',
+    division: 'Adult',
+    beltRank: 'Red Belt',
+    sparringPoints: 610,
+    wins: 11,
+    losses: 6,
+    draws: 2,
+    eventsAttended: 10,
+    tournamentsEntered: 4,
+    hikesCompleted: 3,
+    streak: '⚡ 1 Win',
+    rankChange: 'down',
+    badges: ['🛡️ Iron Defense', '🏃 50km Trail Finisher']
+  },
+  {
+    id: 'lead-5',
+    name: 'Ethan Vance',
+    division: 'Youth',
+    beltRank: 'Blue Belt',
+    sparringPoints: 580,
+    wins: 10,
+    losses: 2,
+    draws: 1,
+    eventsAttended: 10,
+    tournamentsEntered: 5,
+    hikesCompleted: 3,
+    streak: '🔥 5-Match Win Streak',
+    rankChange: 'up',
+    badges: ['🥋 Junior State Gold', '⚡ Tornado Kick Spec']
+  },
+  {
+    id: 'lead-6',
+    memberId: 'tm-mem-102',
+    name: 'Lucas Lin',
+    division: 'Youth',
+    beltRank: 'Yellow Stripe Belt',
+    sparringPoints: 540,
+    wins: 9,
+    losses: 3,
+    draws: 0,
+    eventsAttended: 8,
+    tournamentsEntered: 3,
+    hikesCompleted: 2,
+    streak: '🔥 3-Match Win Streak',
+    rankChange: 'up',
+    badges: ['⭐ Rising Star', '🥋 Junior Bronze', '⚡ Quick Reflexes']
+  },
+  {
+    id: 'lead-7',
+    name: 'Mia Morales',
+    division: 'Youth',
+    beltRank: 'Green Belt',
+    sparringPoints: 510,
+    wins: 8,
+    losses: 4,
+    draws: 1,
+    eventsAttended: 9,
+    tournamentsEntered: 4,
+    hikesCompleted: 3,
+    streak: '⚡ 2 Wins',
+    rankChange: 'same',
+    badges: ['🥋 Best Technique Award', '🌲 Junior Trail Explorer']
+  },
+  {
+    id: 'lead-8',
+    name: 'Marcus Dubois',
+    division: 'Adult',
+    beltRank: 'Brown Belt',
+    sparringPoints: 490,
+    wins: 8,
+    losses: 7,
+    draws: 1,
+    eventsAttended: 7,
+    tournamentsEntered: 3,
+    hikesCompleted: 2,
+    streak: '1 Win',
+    rankChange: 'same',
+    badges: ['🥊 Heavyweight Contender']
+  },
+  {
+    id: 'lead-9',
+    name: 'Jackson Taylor',
+    division: 'Adult',
+    beltRank: 'Blue Belt',
+    sparringPoints: 450,
+    wins: 7,
+    losses: 5,
+    draws: 0,
+    eventsAttended: 6,
+    tournamentsEntered: 2,
+    hikesCompleted: 2,
+    streak: '2 Wins',
+    rankChange: 'down',
+    badges: ['⚡ Axe Kick Master']
+  },
+  {
+    id: 'lead-10',
+    name: 'Chloe Fontaine',
+    division: 'Adult',
+    beltRank: 'Green Belt',
+    sparringPoints: 410,
+    wins: 6,
+    losses: 4,
+    draws: 1,
+    eventsAttended: 9,
+    tournamentsEntered: 2,
+    hikesCompleted: 4,
+    streak: '1 Win',
+    rankChange: 'same',
+    badges: ['💃 High Agility Fighter', '🏔️ Sunrise Trekker']
+  }
+];
+
+
+

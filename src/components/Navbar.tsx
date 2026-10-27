@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Grid, HelpCircle, User, Sparkles, ChevronDown } from 'lucide-react';
+import { Search, Grid, HelpCircle, User, Sparkles, ChevronDown, Sun, Moon } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: string;
@@ -10,13 +10,14 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => {
-  const { role, setRole, setIsRegistrationOpen, activeMember, language } = useApp();
+  const { role, setRole, setIsRegistrationOpen, setIsSearchOpen, activeMember, language, theme, toggleTheme } = useApp();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const navLinks = [
     { id: 'home', labelEn: 'Overview', labelFr: 'Aperçu' },
     { id: 'services', labelEn: 'Disciplines', labelFr: 'Disciplines' },
     { id: 'schedule', labelEn: 'Schedule', labelFr: 'Planning' },
+    { id: 'calendar', labelEn: 'Tournaments & Calendar', labelFr: 'Tournois & Calendrier' },
     { id: 'announcements', labelEn: 'Stream', labelFr: 'Annonces' },
     { id: 'about', labelEn: 'About', labelFr: 'À Propos' },
     { id: 'contact', labelEn: 'Facility', labelFr: 'Centre' }
@@ -69,25 +70,27 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
           </div>
         </button>
 
-        {/* Center: Google-style Search Pill (functional for quickly hopping to sections or classes) */}
-        <div className="hidden md:flex flex-1 max-w-lg items-center relative">
-          <div className="w-full flex items-center gap-2.5 bg-[#f0f4f9] hover:bg-[#e9eef6] focus-within:bg-[#ffffff] focus-within:shadow-[0_1px_3px_1px_rgba(60,64,67,0.15)] focus-within:border-transparent border border-transparent rounded-full px-4 py-2 transition-all">
-            <Search className="w-4 h-4 text-[#5f6368] shrink-0" />
-            <input
-              type="text"
-              placeholder={
-                language === 'en'
-                  ? 'Search 7 disciplines, class times, instructors...'
-                  : 'Rechercher cours, entraîneurs, horaires...'
-              }
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setCurrentTab('services');
-                }
-              }}
-              className="w-full bg-transparent text-xs text-[#1f1f1f] placeholder-[#5f6368] focus:outline-none"
-            />
-          </div>
+        {/* Center: Google-style Search Pill (Ctrl + K) */}
+        <div className="flex-1 max-w-lg items-center relative">
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="w-full flex items-center justify-between gap-2.5 bg-[#f0f4f9] hover:bg-[#e9eef6] border border-[#dadce0]/60 rounded-full px-4 py-2 transition-all cursor-pointer text-left group shadow-2xs hover:shadow-xs"
+            title="Quick Search (Ctrl + K)"
+          >
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <Search className="w-4 h-4 text-[#5f6368] group-hover:text-[#1a73e8] shrink-0 transition-colors" />
+              <span className="text-xs text-[#5f6368] truncate">
+                {language === 'en'
+                  ? 'Search classes, disciplines, announcements...'
+                  : 'Rechercher cours, disciplines, annonces...'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1 shrink-0 text-[10px] font-mono text-[#5f6368] bg-[#ffffff] border border-[#dadce0] px-2 py-0.5 rounded-full shadow-2xs">
+              <kbd className="hidden sm:inline">Ctrl + K</kbd>
+              <kbd className="sm:hidden">⌘K</kbd>
+            </div>
+          </button>
         </div>
 
         {/* Right: Google-style Nav Links & Actions */}
@@ -159,6 +162,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
               {language === 'en' ? 'Admin Console' : 'Console Admin'}
             </button>
           )}
+
+          {/* VS Code Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-[#5f6368] hover:bg-[#f1f3f4] hover:text-[#1f1f1f] transition-colors"
+            title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to VS Code Dark Theme'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-[#fbbc04]" />
+            ) : (
+              <Moon className="w-4 h-4 text-[#5f6368]" />
+            )}
+          </button>
 
           {/* Google App Grid Icon (9 Dots) */}
           <button

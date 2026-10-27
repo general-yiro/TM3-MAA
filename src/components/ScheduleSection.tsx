@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { TimetableClass } from '../types';
-import { Calendar as CalendarIcon, Clock, MapPin, User, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, User, CheckCircle2, ChevronLeft, ChevronRight, CalendarDays, List } from 'lucide-react';
+import { CalendarView } from './CalendarView';
 
 export const ScheduleSection: React.FC = () => {
   const { classes, activeMember, bookClass, cancelClassBooking, setIsRegistrationOpen, role, language } = useApp();
   const [selectedDay, setSelectedDay] = useState<TimetableClass['dayOfWeek']>('Monday');
+  const [scheduleView, setScheduleView] = useState<'timetable' | 'calendar'>('timetable');
 
   const days: { day: TimetableClass['dayOfWeek']; dateNum: string }[] = [
     { day: 'Monday', dateNum: '27' },
@@ -82,32 +84,65 @@ export const ScheduleSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Google Calendar Day Picker Bar */}
-          <div className="flex items-center gap-1.5 bg-[#f0f4f9] p-1.5 rounded-2xl border border-[#dadce0] overflow-x-auto">
-            {days.map((item) => {
-              const isSelected = selectedDay === item.day;
-              return (
-                <button
-                  key={item.day}
-                  onClick={() => setSelectedDay(item.day)}
-                  className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all min-w-[62px] ${
-                    isSelected
-                      ? 'bg-[#1a73e8] text-white shadow-xs font-semibold'
-                      : 'text-[#444746] hover:bg-[#ffffff] hover:text-[#1f1f1f]'
-                  }`}
-                >
-                  <span className="text-[10px] uppercase font-medium">
-                    {item.day.slice(0, 3)}
-                  </span>
-                  <span className="text-sm font-mono mt-0.5">{item.dateNum}</span>
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* View Mode Switcher */}
+            <div className="flex items-center bg-[#f0f4f9] p-1 rounded-full border border-[#dadce0]">
+              <button
+                onClick={() => setScheduleView('timetable')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  scheduleView === 'timetable'
+                    ? 'bg-[#ffffff] text-[#1a73e8] shadow-2xs font-semibold'
+                    : 'text-[#5f6368] hover:text-[#1f1f1f]'
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span>Daily Timetable</span>
+              </button>
+              <button
+                onClick={() => setScheduleView('calendar')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  scheduleView === 'calendar'
+                    ? 'bg-[#ffffff] text-[#1a73e8] shadow-2xs font-semibold'
+                    : 'text-[#5f6368] hover:text-[#1f1f1f]'
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5 text-[#34a853]" />
+                <span>Tournaments & Calendar</span>
+              </button>
+            </div>
+
+            {/* Google Calendar Day Picker Bar */}
+            {scheduleView === 'timetable' && (
+              <div className="flex items-center gap-1.5 bg-[#f0f4f9] p-1.5 rounded-2xl border border-[#dadce0] overflow-x-auto">
+                {days.map((item) => {
+                  const isSelected = selectedDay === item.day;
+                  return (
+                    <button
+                      key={item.day}
+                      onClick={() => setSelectedDay(item.day)}
+                      className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all min-w-[62px] ${
+                        isSelected
+                          ? 'bg-[#1a73e8] text-white shadow-xs font-semibold'
+                          : 'text-[#444746] hover:bg-[#ffffff] hover:text-[#1f1f1f]'
+                      }`}
+                    >
+                      <span className="text-[10px] uppercase font-medium">
+                        {item.day.slice(0, 3)}
+                      </span>
+                      <span className="text-sm font-mono mt-0.5">{item.dateNum}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Calendar Events List */}
-        <div className="space-y-3">
+        {/* Content based on view */}
+        {scheduleView === 'calendar' ? (
+          <CalendarView />
+        ) : (
+          <div className="space-y-3">
           {filteredClasses.length === 0 ? (
             <div className="bg-[#f8fafd] border border-[#e0e2ec] rounded-2xl p-12 text-center text-[#5f6368]">
               <CalendarIcon className="w-8 h-8 mx-auto text-[#747775] mb-2" />
@@ -221,6 +256,7 @@ export const ScheduleSection: React.FC = () => {
             })
           )}
         </div>
+        )}
       </div>
     </section>
   );

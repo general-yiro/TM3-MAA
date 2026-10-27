@@ -21,7 +21,10 @@ import {
   Sparkles,
   Phone,
   Mail,
-  X
+  X,
+  History,
+  Activity,
+  FileText
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -31,6 +34,7 @@ interface AdminPanelProps {
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToHome }) => {
   const {
     members,
+    activityLogs,
     approveMember,
     rejectMember,
     changeMemberStatus,
@@ -46,10 +50,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToHome }) => {
     showToast
   } = useApp();
 
-  const [adminTab, setAdminTab] = useState<'pending' | 'members' | 'announcements' | 'events' | 'broadcast'>('pending');
+  const [adminTab, setAdminTab] = useState<'pending' | 'members' | 'announcements' | 'events' | 'broadcast' | 'activity'>('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | MembershipStatus>('all');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'registration' | 'subscription' | 'approval' | 'profile_update'>('all');
 
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
@@ -181,6 +188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToHome }) => {
           {[
             { id: 'pending', label: `Pending Approvals (${pendingMembers.length})` },
             { id: 'members', label: `Directory Users (${members.length})` },
+            { id: 'activity', label: `Activity Log (${activityLogs.length})` },
             { id: 'announcements', label: `Announcements (${announcements.length})` },
             { id: 'events', label: `Hiking Events (${hikes.length})` },
             { id: 'broadcast', label: 'Telegram Broadcast' }
@@ -595,6 +603,303 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToHome }) => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* TAB 6: ACTIVITY LOG (MD3 TABLE FORMAT) */}
+        {adminTab === 'activity' && (
+          <div className="bg-[#ffffff] border border-[#e0e2ec] rounded-3xl p-6 shadow-xs space-y-5">
+            {/* Header with Title and Search */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#f1f3f4]">
+              <div>
+                <h3 className="text-base font-semibold text-[#1f1f1f] flex items-center gap-2">
+                  <History className="w-5 h-5 text-[#1a73e8]" />
+                  <span>Audit & Activity Log</span>
+                </h3>
+                <p className="text-xs text-[#5f6368] mt-0.5">
+                  Real-time activity tracking for member registrations, approvals, subscription renewals, payments, and profile edits.
+                </p>
+              </div>
+
+              {/* Search Field */}
+              <div className="relative min-w-[260px]">
+                <Search className="w-4 h-4 text-[#5f6368] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  placeholder="Filter logs by member, event, actor..."
+                  className="w-full pl-9 pr-8 py-2 text-xs bg-[#ffffff] border border-[#dadce0] rounded-full focus:outline-none focus:border-[#1a73e8]"
+                />
+                {activitySearch && (
+                  <button
+                    onClick={() => setActivitySearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#747775] hover:text-[#1f1f1f]"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Material Design 3 Filter Chips */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-medium text-[#5f6368] mr-1 flex items-center gap-1">
+                <Filter className="w-3 h-3" />
+                <span>Filter:</span>
+              </span>
+
+              {[
+                { id: 'all', label: 'All Activities', count: activityLogs.length },
+                {
+                  id: 'registration',
+                  label: 'Registrations',
+                  count: activityLogs.filter((l) => l.eventType === 'registration').length
+                },
+                {
+                  id: 'subscription',
+                  label: 'Subscriptions & Payments',
+                  count: activityLogs.filter(
+                    (l) => l.eventType === 'subscription_change' || l.eventType === 'payment'
+                  ).length
+                },
+                {
+                  id: 'approval',
+                  label: 'Approvals & Status',
+                  count: activityLogs.filter(
+                    (l) => l.eventType === 'approval' || l.eventType === 'rejection' || l.eventType === 'status_change'
+                  ).length
+                },
+                {
+                  id: 'profile_update',
+                  label: 'Profile Updates',
+                  count: activityLogs.filter((l) => l.eventType === 'profile_update').length
+                }
+              ].map((chip) => {
+                const isSelected = activityFilter === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    onClick={() => setActivityFilter(chip.id as any)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-[#e8f0fe] text-[#1a73e8] border border-[#1a73e8]'
+                        : 'bg-[#ffffff] text-[#444746] border border-[#dadce0] hover:bg-[#f8fafd]'
+                    }`}
+                  >
+                    <span>{chip.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        isSelected
+                          ? 'bg-[#1a73e8] text-white'
+                          : 'bg-[#f1f3f4] text-[#5f6368]'
+                      }`}
+                    >
+                      {chip.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Material Design 3 Table Container */}
+            <div className="border border-[#dadce0] rounded-2xl overflow-hidden shadow-2xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-[#1f1f1f]">
+                  <thead className="bg-[#f8fafd] border-b border-[#dadce0] text-[11px] font-semibold text-[#5f6368] uppercase tracking-wider">
+                    <tr>
+                      <th scope="col" className="px-5 py-3.5 whitespace-nowrap">Timestamp</th>
+                      <th scope="col" className="px-5 py-3.5 whitespace-nowrap">Member / Subject</th>
+                      <th scope="col" className="px-5 py-3.5 whitespace-nowrap">Event Type</th>
+                      <th scope="col" className="px-5 py-3.5">Activity & Changes</th>
+                      <th scope="col" className="px-5 py-3.5 whitespace-nowrap">Actor / Initiator</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-[#f1f3f4]">
+                    {activityLogs
+                      .filter((log) => {
+                        const q = activitySearch.toLowerCase();
+                        const matchesSearch =
+                          log.memberName.toLowerCase().includes(q) ||
+                          log.description.toLowerCase().includes(q) ||
+                          log.actor.toLowerCase().includes(q) ||
+                          (log.details && log.details.toLowerCase().includes(q)) ||
+                          log.eventType.toLowerCase().includes(q);
+
+                        if (!matchesSearch) return false;
+                        if (activityFilter === 'all') return true;
+                        if (activityFilter === 'registration') return log.eventType === 'registration';
+                        if (activityFilter === 'subscription')
+                          return log.eventType === 'subscription_change' || log.eventType === 'payment';
+                        if (activityFilter === 'approval')
+                          return log.eventType === 'approval' || log.eventType === 'rejection' || log.eventType === 'status_change';
+                        if (activityFilter === 'profile_update') return log.eventType === 'profile_update';
+                        return true;
+                      })
+                      .map((log) => {
+                        const getEventBadge = (type: string) => {
+                          switch (type) {
+                            case 'registration':
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#e8f0fe] text-[#1a73e8] border border-[#d2e3fc]">
+                                  <Users className="w-3 h-3" />
+                                  <span>Registration</span>
+                                </span>
+                              );
+                            case 'payment':
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#c4eed0] text-[#137333] border border-[#a8dab5]">
+                                  <CreditCard className="w-3 h-3" />
+                                  <span>Stripe Payment</span>
+                                </span>
+                              );
+                            case 'subscription_change':
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#feefc3] text-[#b06000] border border-[#fdd663]">
+                                  <TrendingUp className="w-3 h-3" />
+                                  <span>Subscription</span>
+                                </span>
+                              );
+                            case 'approval':
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#c4eed0] text-[#137333] border border-[#a8dab5]">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  <span>Approved</span>
+                                </span>
+                              );
+                            case 'rejection':
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#fce8e6] text-[#c5221f] border border-[#f5c2c7]">
+                                  <XCircle className="w-3 h-3" />
+                                  <span>Rejected</span>
+                                </span>
+                              );
+                            case 'profile_update':
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#feefc3] text-[#b06000] border border-[#fdd663]">
+                                  <Activity className="w-3 h-3" />
+                                  <span>Profile Edit</span>
+                                </span>
+                              );
+                            default:
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#f1f3f4] text-[#444746] border border-[#dadce0]">
+                                  <Clock className="w-3 h-3" />
+                                  <span className="capitalize">{type}</span>
+                                </span>
+                              );
+                          }
+                        };
+
+                        return (
+                          <tr key={log.id} className="hover:bg-[#f8fafd] transition-colors">
+                            {/* Timestamp */}
+                            <td className="px-5 py-4 whitespace-nowrap text-[#5f6368] font-mono text-[11px]">
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-[#747775] shrink-0" />
+                                <span>{log.timestamp}</span>
+                              </div>
+                            </td>
+
+                            {/* Member / Subject */}
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-full bg-[#1a73e8] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                                  {log.memberName
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')}
+                                </div>
+                                <div>
+                                  <div className="font-semibold text-xs text-[#1f1f1f]">
+                                    {log.memberName}
+                                  </div>
+                                  <div className="text-[10px] text-[#5f6368] font-mono">
+                                    {log.memberId}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Event Type Chip */}
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              {getEventBadge(log.eventType)}
+                            </td>
+
+                            {/* Description & Details */}
+                            <td className="px-5 py-4">
+                              <div className="text-xs text-[#1f1f1f] font-medium">
+                                {log.description}
+                              </div>
+                              {log.details && (
+                                <div className="text-[11px] text-[#5f6368] mt-0.5 line-clamp-1">
+                                  {log.details}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Initiator / Actor */}
+                            <td className="px-5 py-4 whitespace-nowrap text-xs text-[#444746]">
+                              <span className="inline-block px-2.5 py-0.5 bg-[#f1f3f4] border border-[#dadce0] rounded-full text-[11px] font-medium text-[#1f1f1f]">
+                                {log.actor}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                    {activityLogs.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="p-12 text-center text-[#5f6368]">
+                          <History className="w-8 h-8 text-[#747775] mx-auto mb-2" />
+                          <div className="font-semibold text-sm text-[#1f1f1f]">No Activity Recorded Yet</div>
+                          <p className="text-xs text-[#5f6368] mt-0.5">
+                            Member registrations, approvals, and profile changes will populate here.
+                          </p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MD3 Table Footer */}
+              <div className="p-3.5 bg-[#f8fafd] border-t border-[#dadce0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#5f6368]">
+                <div>
+                  Showing{' '}
+                  <span className="font-semibold text-[#1f1f1f]">
+                    {
+                      activityLogs.filter((log) => {
+                        const q = activitySearch.toLowerCase();
+                        const matchesSearch =
+                          log.memberName.toLowerCase().includes(q) ||
+                          log.description.toLowerCase().includes(q) ||
+                          log.actor.toLowerCase().includes(q) ||
+                          (log.details && log.details.toLowerCase().includes(q)) ||
+                          log.eventType.toLowerCase().includes(q);
+
+                        if (!matchesSearch) return false;
+                        if (activityFilter === 'all') return true;
+                        if (activityFilter === 'registration') return log.eventType === 'registration';
+                        if (activityFilter === 'subscription')
+                          return log.eventType === 'subscription_change' || log.eventType === 'payment';
+                        if (activityFilter === 'approval')
+                          return log.eventType === 'approval' || log.eventType === 'rejection' || log.eventType === 'status_change';
+                        if (activityFilter === 'profile_update') return log.eventType === 'profile_update';
+                        return true;
+                      }).length
+                    }
+                  </span>{' '}
+                  of <span className="font-semibold text-[#1f1f1f]">{activityLogs.length}</span> audit records
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] font-mono text-[#747775]">
+                  <span className="w-2 h-2 rounded-full bg-[#34a853]" />
+                  <span>MD3 Real-time Stream Active</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
